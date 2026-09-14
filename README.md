@@ -9,7 +9,6 @@ A Laravel 10 application for managing products, customers, orders, inventory, an
 * PostgreSQL
 * JavaScript
 * Blade
-* Vite
 * Laravel Queue
 
 ## Main Features
