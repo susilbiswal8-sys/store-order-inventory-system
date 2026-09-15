@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\CustomerOrderController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\LowStockProductController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,3 +21,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('/orders', [OrderController::class, 'store']);
+Route::get('/customers/orders', [CustomerOrderController::class, 'index']);
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/low-stock', [LowStockProductController::class, 'index']);

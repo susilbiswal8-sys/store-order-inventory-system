@@ -1,66 +1,338 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Store Order & Inventory Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 10 take-home assignment for managing products, customers, orders, order items, stock deduction, low-stock reporting, and simulated order confirmation jobs.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.1+
+- Composer
+- Node.js and npm
+- PostgreSQL or another Laravel-supported database
+- Laravel 10
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Setup
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Install PHP dependencies:
 
-## Learning Laravel
+```bash
+composer install
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Install frontend dependencies:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```bash
+npm install
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Create the environment file:
 
-## Laravel Sponsors
+```bash
+cp .env.example .env
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Generate the app key:
 
-### Premium Partners
+```bash
+php artisan key:generate
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+Configure the database in `.env`:
 
-## Contributing
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=store_order_inventory_system
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Run migrations and seeders:
 
-## Code of Conduct
+```bash
+php artisan migrate
+php artisan db:seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Build frontend assets:
 
-## Security Vulnerabilities
+```bash
+npm run build
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Run the application locally:
 
-## License
+```bash
+php artisan serve
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Open:
+
+```text
+http://127.0.0.1:8000
+```
+
+## Configuration
+
+Low-stock threshold is configurable through `.env`:
+
+```env
+LOW_STOCK_THRESHOLD=10
+```
+
+The value is read from:
+
+```php
+config('inventory.low_stock_threshold')
+```
+
+Queue driver can be configured with:
+
+```env
+QUEUE_CONNECTION=sync
+```
+
+For local background queue testing:
+
+```env
+QUEUE_CONNECTION=database
+```
+
+Then run:
+
+```bash
+php artisan queue:table
+php artisan migrate
+php artisan queue:work
+```
+
+## Database Design
+
+Main tables:
+
+- `products`
+- `customers`
+- `orders`
+- `order_items`
+
+### Products
+
+Stores current product catalog and inventory.
+
+Important fields:
+
+- `name`
+- `code`
+- `price_per_unit`
+- `tax_percentage`
+- `stock_on_hand`
+
+`code` is unique.
+
+### Customers
+
+Stores customer identity.
+
+Important fields:
+
+- `name`
+- `email`
+
+`email` is unique.
+
+### Orders
+
+Stores one order header for one customer.
+
+Important fields:
+
+- `customer_id`
+- `subtotal`
+- `tax_total`
+- `grand_total`
+
+Totals are stored so historical orders do not change later.
+
+### Order Items
+
+Stores product lines for an order.
+
+Important fields:
+
+- `order_id`
+- `product_id`
+- `quantity`
+- `unit_price`
+- `tax_percentage`
+- `line_subtotal`
+- `line_tax`
+- `line_total`
+
+`unit_price` and `tax_percentage` are copied from the product at order time. This preserves historical order data if product price or tax percentage changes later.
+
+## API Endpoints
+
+### Create Order
+
+```http
+POST /api/orders
+```
+
+Example request:
+
+```json
+{
+  "customer": {
+    "name": "Maya Patel",
+    "email": "maya.patel@example.com"
+  },
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 2
+    }
+  ]
+}
+```
+
+Success response: `201 Created`
+
+The API returns customer details, order totals, order items, and product information.
+
+Validation errors return `422`.
+
+Insufficient stock returns `409`.
+
+### Customer Order History
+
+```http
+GET /api/customers/orders?email=maya.patel@example.com
+```
+
+Returns the customer, their orders, order items, product information, subtotal, tax total, and grand total.
+
+If the customer does not exist, the API returns `404`.
+
+### Low-Stock Products
+
+```http
+GET /api/products/low-stock
+```
+
+Optional threshold override:
+
+```http
+GET /api/products/low-stock?threshold=5
+```
+
+Returns products where:
+
+```text
+stock_on_hand < threshold
+```
+
+Invalid thresholds return `422`.
+
+### Products
+
+```http
+GET /api/products
+```
+
+Returns products for the frontend catalog and order form.
+
+## Order Creation Flow
+
+1. Validate request using `StoreOrderRequest`.
+2. Find or create the customer by email.
+3. Start a database transaction.
+4. Load requested products.
+5. Lock product rows using `lockForUpdate()`.
+6. Check stock after the rows are locked.
+7. Calculate subtotal, tax, and grand total on the server.
+8. Create the order.
+9. Create order items with historical price and tax values.
+10. Deduct stock.
+11. Commit the transaction.
+12. Dispatch `SendOrderConfirmationJob` after commit.
+
+Client-provided totals are never trusted.
+
+## Concurrency Design
+
+The critical stock operation is protected with:
+
+```php
+DB::transaction(...)
+lockForUpdate()
+```
+
+Product rows are locked before stock is checked and before stock is deducted.
+
+This prevents overselling. For example, if stock is `1` and two requests both try to buy quantity `1`, the first transaction locks the product row. The second request must wait. After the first transaction commits and stock becomes `0`, the second request checks the current stock and fails cleanly with `409`.
+
+For orders with multiple products, products are locked in ascending ID order to reduce deadlock risk.
+
+## Queue Job
+
+`SendOrderConfirmationJob` simulates sending an order-confirmation email by writing to the Laravel log.
+
+The job receives only the order ID and loads the required order/customer data inside `handle()`.
+
+The job is dispatched with:
+
+```php
+SendOrderConfirmationJob::dispatch($order->id)->afterCommit();
+```
+
+Dispatching after commit matters because a queue worker could otherwise run before the order transaction is committed. That could cause the job to read missing data or send a confirmation for an order that later rolls back.
+
+## Frontend
+
+The root page `/` provides a simple dashboard for:
+
+- viewing products
+- creating orders
+- checking low-stock products
+- searching customer order history
+
+The frontend uses Blade, Vite, vanilla JavaScript, and the existing API endpoints.
+
+## Testing
+
+Run tests:
+
+```bash
+php artisan test
+```
+
+The test suite covers:
+
+- successful order creation
+- subtotal calculation
+- tax calculation
+- grand total calculation
+- stock deduction
+- insufficient stock handling
+- customer order history
+- low-stock API
+- confirmation job dispatch
+- practical stock exhaustion behavior
+
+True simultaneous concurrency testing should be run against PostgreSQL or MySQL, not SQLite in-memory, because row-level locking behavior depends on the database engine.
+
+## Assumptions
+
+- Customers can be created during order creation.
+- Products must already exist before creating an order.
+- Orders use `product_id` values in request items.
+- Duplicate product IDs in the same order are rejected.
+- Stock is deducted only when the full order succeeds.
+- If any item has insufficient stock, the full order fails.
+- Product price and tax percentage are snapshotted onto order items.
+- Order totals are stored historically.
+- No authentication is required for this assignment.
+- No payment, shipping, discount, refund, cancellation, or order-status workflow is included.
+- The confirmation email is simulated with logs; real SMTP is not required.
+- Money values use decimal columns with two decimal places.
+

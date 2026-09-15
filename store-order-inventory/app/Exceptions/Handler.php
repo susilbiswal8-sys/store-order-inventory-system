@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\JsonResponse;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -41,6 +42,20 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
+        $this->renderable(function (InsufficientStockException $e): JsonResponse {
+            return response()->json([
+                'message' => 'Unable to create order because one or more items are out of stock.',
+                'errors' => [
+                    'items' => [
+                        [
+                            'product_id' => $e->productId,
+                            'message' => 'Requested quantity is not available.',
+                        ],
+                    ],
+                ],
+            ], 409);
+        });
+
         $this->reportable(function (Throwable $e) {
             //
         });
